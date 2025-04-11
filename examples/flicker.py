@@ -7,7 +7,7 @@ WARNING: If you have not previously connected to the bridge, run connect_bridge.
 import random
 from time import sleep
 
-from phue import Bridge
+from phue2 import Bridge
 
 b = Bridge()
 b.connect()

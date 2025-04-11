@@ -1,5 +1,5 @@
 """
-phue_modern - A modernized Philips Hue Python library
+phue2 - A modernized Philips Hue Python library
 Based on the original phue by Nathanaël Lécaudé
 Original protocol hacking by rsmck: http://rsmck.co.uk/hue
 
@@ -18,7 +18,7 @@ from ._internal.console import console
 
 import logging
 
-logger = logging.getLogger("phue_modern")
+logger = logging.getLogger("phue2")
 
 
 __all__ = [

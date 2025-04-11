@@ -7,12 +7,13 @@ import httpx
 import pytest
 import respx
 
-import phue.__main__
-from phue import Bridge
-from phue.__main__ import main
+from phue2 import Bridge
+from phue2.__main__ import main
 
-# Disable styling for tests to make assertions easier and less brittle
-phue.__main__.DISABLE_STYLING = True
+
+@pytest.fixture(autouse=True)
+def disable_styling(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("phue2.__main__.DISABLE_STYLING", True)
 
 
 def test_cli_help() -> None:
@@ -26,8 +27,8 @@ def test_cli_help() -> None:
 
 def test_cli_missing_args() -> None:
     """Test that the CLI errors when no host or command is provided but no config exists."""
-    with patch("phue.__main__.get_bridge_from_config", return_value=None):
-        with patch("phue._internal.console.console.error") as mock_error:
+    with patch("phue2.__main__.get_bridge_from_config", return_value=None):
+        with patch("phue2._internal.console.console.error") as mock_error:
             result = main([])
             assert result == 1
             mock_error.assert_called_once()
@@ -45,7 +46,7 @@ def test_cli_successful_connection(tmp_path: Path) -> None:
     )
 
     # Run the CLI with mocked input for the link button prompt
-    with patch("phue._internal.console.console.success") as mock_success:
+    with patch("phue2._internal.console.console.success") as mock_success:
         result = main(
             ["--host", "192.168.1.100", "--config-file-path", str(config_path)]
         )
@@ -74,8 +75,8 @@ def test_cli_retry_on_registration_exception(tmp_path: Path) -> None:
     # Mock the input function to simulate pressing the button
     with (
         patch("builtins.input", return_value=""),
-        patch("phue._internal.console.console.warning") as mock_warning,
-        patch("phue._internal.console.console.success") as mock_success,
+        patch("phue2._internal.console.console.warning") as mock_warning,
+        patch("phue2._internal.console.console.success") as mock_success,
     ):
         result = main(
             ["--host", "192.168.1.100", "--config-file-path", str(config_path)]
@@ -104,9 +105,9 @@ def test_cli_list_command(resource: str, attribute: str) -> None:
     setattr(mock_bridge, attribute, mock_items)
 
     with (
-        patch("phue.__main__.Bridge", return_value=mock_bridge),
-        patch("phue.__main__.get_bridge_from_config", return_value=None),
-        patch("phue._internal.console.console.info") as mock_info,
+        patch("phue2.__main__.Bridge", return_value=mock_bridge),
+        patch("phue2.__main__.get_bridge_from_config", return_value=None),
+        patch("phue2._internal.console.console.info") as mock_info,
     ):
         result = main(["--host", "192.168.1.100", "list", resource])
 
@@ -132,9 +133,9 @@ def test_cli_get_command() -> None:
     mock_bridge.lights_by_id = {}
 
     with (
-        patch("phue.__main__.Bridge", return_value=mock_bridge),
-        patch("phue.__main__.get_bridge_from_config", return_value=None),
-        patch("phue._internal.console.console.info") as mock_info,
+        patch("phue2.__main__.Bridge", return_value=mock_bridge),
+        patch("phue2.__main__.get_bridge_from_config", return_value=None),
+        patch("phue2._internal.console.console.info") as mock_info,
     ):
         result = main(["--host", "192.168.1.100", "get", "light", "Test Light"])
 
@@ -153,9 +154,9 @@ def test_cli_set_command() -> None:
     mock_bridge.lights_by_name = {}
 
     with (
-        patch("phue.__main__.Bridge", return_value=mock_bridge),
-        patch("phue.__main__.get_bridge_from_config", return_value=None),
-        patch("phue._internal.console.console.success") as mock_success,
+        patch("phue2.__main__.Bridge", return_value=mock_bridge),
+        patch("phue2.__main__.get_bridge_from_config", return_value=None),
+        patch("phue2._internal.console.console.success") as mock_success,
     ):
         result = main(
             ["--host", "192.168.1.100", "set", "light", "1", "--on", "--bri", "200"]

@@ -7,7 +7,7 @@ WARNING: If you have not previously connected to the bridge, run connect_bridge.
 
 from time import sleep
 
-from phue import Bridge, Light
+from phue2 import Bridge, Light
 
 b = Bridge()  # Enter bridge IP here.
 

@@ -11,7 +11,7 @@ from unittest import mock
 
 import pytest
 
-import phue
+import phue2
 
 
 @pytest.fixture
@@ -27,9 +27,9 @@ def temp_home(tmp_path: Path) -> Generator[Path, None, None]:
 def test_register(temp_home: Path):
     """test that registration happens automatically during setup."""
     confname = os.path.join(temp_home, ".python_hue")
-    with mock.patch("phue.Bridge.request") as req:
+    with mock.patch("phue2.Bridge.request") as req:
         req.return_value = [{"success": {"username": "fooo"}}]
-        bridge = phue.Bridge(ip="10.0.0.0")
+        bridge = phue2.Bridge(ip="10.0.0.0")
         assert bridge.config_file_path == confname
 
     # check contents of file
@@ -38,35 +38,35 @@ def test_register(temp_home: Path):
         assert contents == '{"10.0.0.0": {"username": "fooo"}}'
 
     # make sure we can open under a different file
-    bridge2 = phue.Bridge(ip="10.0.0.0")
+    bridge2 = phue2.Bridge(ip="10.0.0.0")
     assert bridge2.username == "fooo"
 
     # and that we can even open without an ip address
-    bridge3 = phue.Bridge()
+    bridge3 = phue2.Bridge()
     assert bridge3.username == "fooo"
     assert bridge3.ip == "10.0.0.0"
 
 
 def test_register_fail():
     """Test that registration fails in the expected way for timeout"""
-    with mock.patch("phue.Bridge.request") as req:
+    with mock.patch("phue2.Bridge.request") as req:
         req.return_value = [{"error": {"type": 101}}]
-        with pytest.raises(phue.PhueRegistrationException):
-            phue.Bridge(ip="10.0.0.0")
+        with pytest.raises(phue2.PhueRegistrationException):
+            phue2.Bridge(ip="10.0.0.0")
 
 
 def test_register_unknown_user():
     """Test that registration for unknown user works."""
-    with mock.patch("phue.Bridge.request") as req:
+    with mock.patch("phue2.Bridge.request") as req:
         req.return_value = [{"error": {"type": 7}}]
-        with pytest.raises(phue.PhueException):
-            phue.Bridge(ip="10.0.0.0")
+        with pytest.raises(phue2.PhueException):
+            phue2.Bridge(ip="10.0.0.0")
 
 
 @pytest.fixture
 def mock_bridge():
     """Fixture that provides a bridge with mocked request method."""
-    with mock.patch("phue.Bridge.request") as mock_request:
+    with mock.patch("phue2.Bridge.request") as mock_request:
         # Mock the lights collection endpoint
 
         def mock_request_side_effect(
@@ -93,11 +93,11 @@ def mock_bridge():
 
         mock_request.side_effect = mock_request_side_effect
 
-        bridge = phue.Bridge(ip="10.0.0.0", username="username")
+        bridge = phue2.Bridge(ip="10.0.0.0", username="username")
         yield bridge
 
 
-def test_get_lights(mock_bridge: phue.Bridge):
+def test_get_lights(mock_bridge: phue2.Bridge):
     """Test getting light objects by ID."""
     lights = mock_bridge.get_light_objects("id")
     assert lights[1].name == "Living Room Bulb"

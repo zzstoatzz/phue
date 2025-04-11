@@ -6,8 +6,8 @@ import logging
 import os
 import sys
 
-from phue import Bridge, PhueRegistrationException
-from phue._internal.console import (
+from phue2 import Bridge, PhueRegistrationException
+from phue2._internal.console import (
     BLUE,
     BOLD,
     CYAN,

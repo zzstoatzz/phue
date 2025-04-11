@@ -3,12 +3,12 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from phue.light import Light
+from phue2.light import Light
 
 logger = logging.getLogger("phue_modern")
 
 if TYPE_CHECKING:
-    from phue.bridge import Bridge
+    from phue2.bridge import Bridge
 
 
 class Group(Light):

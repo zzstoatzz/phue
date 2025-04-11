@@ -1,5 +1,5 @@
 [project]
-name = "phue"
+name = "phue2"
 dynamic = ["version"]
 description = "A Philips Hue Python library"
 authors = [{ name = "Nathanaël Lécaudé" }, { name = "Nathan Nowack" }]
@@ -9,7 +9,7 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.scripts]
-phue = "phue.__main__:main"
+phue = "phue2.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -32,7 +32,7 @@ requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/phue"]
+packages = ["src/phue2"]
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
@@ -52,7 +52,14 @@ filterwarnings = []
 
 [tool.pyright]
 include = ["src", "tests"]
-exclude = ["**/node_modules", "**/__pycache__", ".venv", ".git", "dist"]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv",
+    ".git",
+    "dist",
+    "*.egg-info",
+]
 pythonVersion = "3.10"
 typeCheckingMode = "strict"
 reportMissingImports = true

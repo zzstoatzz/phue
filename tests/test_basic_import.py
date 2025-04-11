@@ -2,6 +2,6 @@ from types import ModuleType
 
 
 def test_import_works():
-    import phue
+    import phue2
 
-    assert isinstance(phue, ModuleType)
+    assert isinstance(phue2, ModuleType)

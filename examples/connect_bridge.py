@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 
-from phue import Bridge, Light, PhueRegistrationException, console
+from phue2 import Bridge, Light, PhueRegistrationException, console
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 

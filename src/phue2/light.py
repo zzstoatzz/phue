@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from phue.bridge import Bridge
+    from phue2.bridge import Bridge
 
 logger = logging.getLogger("phue_modern")
 

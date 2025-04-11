@@ -17,7 +17,7 @@ from tkinter import (
     Tk,
 )
 
-from phue import Bridge
+from phue2 import Bridge
 
 
 def scale_command(x: str, light_id: int) -> None:

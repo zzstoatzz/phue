@@ -6,7 +6,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
-    from phue import Bridge
+    from phue2 import Bridge
 
 logger = logging.getLogger("phue_modern")
 

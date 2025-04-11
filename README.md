@@ -1,8 +1,28 @@
-# phue: A Python library for Philips Hue
+# phue2
 
-Full featured Python library to control the Philips Hue lighting system.
+modern Python library to control the Philips Hue lighting system
 
 This is a fork of the original [phue library](https://github.com/studioimaginaire/phue) by Nathanaël Lécaudé, modernized with type annotations, improved error handling, and a fully-featured CLI. The library remains MIT licensed.
+
+> [!IMPORTANT]
+
+> I appreciate the original authors work and if there's any interest in merging these (substantial) changes back into the original library, I'm happy to do so.
+
+## Installation
+
+### Using uv
+
+```bash
+uv add phue2
+
+uv pip install phue2
+```
+
+### Using pip
+
+```bash
+pip install phue2
+```
 
 ## Repository Structure
 
@@ -10,19 +30,18 @@ This is a fork of the original [phue library](https://github.com/studioimaginair
 .
 ├── LICENSE
 ├── README.md
-├── examples/           # Example scripts for controlling Hue lights
+├── examples/
 ├── src/
-│   └── phue/          # Core library code
+│   └── phue/
 │       ├── __init__.py
 │       ├── __main__.py      # CLI interface
-│       ├── _internal/       # Internal utilities
 │       ├── bridge.py        # Bridge connection handling
 │       ├── exceptions.py    # Custom exceptions
 │       ├── group.py         # Group controls
 │       ├── light.py         # Light controls
 │       ├── scene.py         # Scene handling
 │       └── sensor.py        # Sensor controls
-└── tests/              # Comprehensive test suite
+└── tests/              # Tests
 ```
 
 ## Requirements
@@ -40,13 +59,7 @@ This is a fork of the original [phue library](https://github.com/studioimaginair
 - Auto-discovery of Hue bridges on the network
 - Simple and intuitive API for controlling Hue devices
 
-## Installation
 
-### Using pip
-
-```bash
-pip install phue
-```
 
 ## Command Line Usage
 
@@ -74,7 +87,7 @@ phue set group "Downstairs" --off
 Using the set_light and get_light methods you can control pretty much all the parameters:
 
 ```python
-from phue import Bridge
+from phue2 import Bridge
 
 # Connect to the bridge
 b = Bridge('192.168.1.100')
@@ -139,7 +152,7 @@ for light_name in ['Kitchen', 'Bedroom', 'Garage']:
 The library provides custom exceptions for better error handling:
 
 ```python
-from phue import Bridge, PhueRegistrationException, PhueRequestTimeout
+from phue2 import Bridge, PhueRegistrationException, PhueRequestTimeout
 
 try:
     b = Bridge('192.168.1.100')
