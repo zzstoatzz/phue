@@ -1,16 +1,18 @@
-#!/usr/bin/python
-from phue import Bridge
+"""
+This script will have all lights change to a random color.
+
+WARNING: If you have not previously connected to the bridge, run connect_bridge.py first.
+"""
+
 import random
 
-b = Bridge() # Enter bridge IP here.
+from phue import Bridge
 
-#If running for the first time, press button on bridge and run with b.connect() uncommented
-#b.connect()
+b = Bridge()
 
-lights = b.get_light_objects()
+if __name__ == "__main__":
+    lights = b.get_light_objects()
 
-for light in lights:
-	light.brightness = 254
-	light.xy = [random.random(),random.random()]
-
-
+    for light in lights:
+        light.brightness = 254
+        light.xy = (random.random(), random.random())

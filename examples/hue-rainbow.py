@@ -1,32 +1,39 @@
-#!/usr/bin/python
-# This script will have all lights, which are on, continuously loop through the rainbow 
-# in the time specified in totalTime
-from phue import Bridge
-import random
+#!/usr/bin/env python3
+"""
+This script creates a rainbow effect by cycling through hue values for all active lights.
 
-b = Bridge() # Enter bridge IP here.
+WARNING: If you have not previously connected to the bridge, run connect_bridge.py first.
+"""
 
-# If running for the first time, press button on bridge and run with b.connect() uncommented
-# b.connect()
+from time import sleep
 
-lights = b.get_light_objects()
+from phue import Bridge, Light
 
-totalTime = 30 # in seconds
-transitionTime = 1 # in seconds
+b = Bridge()  # Enter bridge IP here.
 
-maxHue = 65535
-hueIncrement = maxHue / totalTime
+# Get all the lights as a dictionary by ID
+lights: dict[int, Light] = b.get_light_objects("id")
 
-for light in lights:
-    light.transitiontime = transitionTime * 10
+totalTime = 30  # in seconds
+transitionTime = 1  # in seconds
+
+maxHue = 65535  # Maximum value for hue
+hueIncrement = int(maxHue / totalTime)
+
+# Configure initial light settings
+for light_id, light in lights.items():
+    light.transitiontime = int(
+        transitionTime * 10
+    )  # Convert to deciseconds and ensure int
     light.brightness = 254
     light.saturation = 254
-    # light.on = True # uncomment to turn all lights on
+    # light.on = True  # Uncomment to turn all lights on
 
+# Main loop to cycle through colors
 hue = 0
 while True:
-    for light in lights:
-	      light.hue = hue
+    for light_id, light in lights.items():
+        light.hue = int(hue)  # Ensure hue is always an integer
 
     hue = (hue + hueIncrement) % maxHue
 
