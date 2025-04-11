@@ -20,6 +20,7 @@ class Scene:
         version: int = 0,
         type: str = "",
         group: str = "",
+        **kwargs: Any,  # Accept additional parameters from API
     ):
         """Initialize a Scene object.
 
@@ -36,6 +37,7 @@ class Scene:
             version: Version of the scene
             type: Type of the scene
             group: Group associated with the scene
+            **kwargs: Additional parameters from the API (e.g., 'image')
         """
         self.scene_id = sid
         self.appdata = appdata or {}
