@@ -24,6 +24,7 @@ dev = [
     "ipython>=8.12.3",
     "pdbpp>=0.10.3",
     "respx>=0.22.0",
+    "pyreadline3; sys_platform == 'win32'",
 ]
 
 

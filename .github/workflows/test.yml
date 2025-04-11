@@ -4,17 +4,15 @@ on:
   push:
     branches: [ master ]
     paths:
-      - "src/**"
-      - "python/**"
-      - "tests/**"
+      - "src/**/*.py"
+      - "tests/**/*.py"
       - "pyproject.toml"
       - ".github/workflows/test.yml"
   pull_request:
     branches: [ master ]
     paths:
-      - "src/**"
-      - "python/**"
-      - "tests/**"
+      - "src/**/*.py"
+      - "tests/**/*.py"
       - "pyproject.toml"
       - ".github/workflows/test.yml"
 
