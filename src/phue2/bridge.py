@@ -46,6 +46,7 @@ class Bridge:
         username: str | None = None,
         config_file_path: str | None = None,
         timeout: int = 10,
+        save_config: bool = True,
     ):
         """Initialization function.
 
@@ -54,6 +55,7 @@ class Bridge:
             username: Optional username for the bridge
             config_file_path: Optional path to the configuration file
             timeout: Request timeout in seconds (default: 10)
+            save_config: If False, don't save the config file (default: True)
         """
         # Determine config file path
         if config_file_path is not None:
@@ -89,6 +91,7 @@ class Bridge:
         self.ip = ip
         self._username = username
         self.timeout = timeout
+        self.save_config = save_config
         self.lights_by_id: dict[int, Light] = {}
         self.lights_by_name: dict[str, Light] = {}
         self.sensors_by_id: dict[int, Sensor] = {}
@@ -233,12 +236,13 @@ class Bridge:
         for line in response:
             for key in line:
                 if "success" in key:
-                    with open(self.config_file_path, "w") as f:
-                        logger.info(
-                            "Writing configuration file to " + self.config_file_path
-                        )
-                        f.write(json.dumps({self.ip: line["success"]}))
-                        logger.info("Reconnecting to the bridge")
+                    if self.save_config:
+                        with open(self.config_file_path, "w") as f:
+                            logger.info(
+                                "Writing configuration file to " + self.config_file_path
+                            )
+                            f.write(json.dumps({self.ip: line["success"]}))
+                            logger.info("Reconnecting to the bridge")
                     self._username = line["success"]["username"]
                     return
                 if "error" in key:

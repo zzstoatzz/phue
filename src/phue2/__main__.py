@@ -60,6 +60,12 @@ def parse_args(
     )
     parser.add_argument("--config-file-path", help="Path to the config file")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--no-save-config",
+        action="store_false",
+        dest="save_config",
+        help="Do not save connection details to the config file",
+    )
 
     # Command subparsers
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
@@ -161,7 +167,11 @@ def main(argv: list[str] | None = None) -> int:
         console.info(f"Connecting to bridge at {args.host}...")
         while True:
             try:
-                bridge = Bridge(args.host, config_file_path=args.config_file_path)
+                bridge = Bridge(
+                    args.host,
+                    config_file_path=args.config_file_path,
+                    save_config=args.save_config,
+                )
                 console.success("Successfully connected to the bridge!")
                 break
             except PhueRegistrationException:

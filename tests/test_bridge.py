@@ -90,3 +90,30 @@ def test_config_file(tmp_path: Path) -> None:
         # Test loading from config
         bridge2 = phue2.Bridge(config_file_path=str(config_file))
         assert bridge2.username == "testuser"
+
+
+def test_no_save_config(tmp_path: Path) -> None:
+    """Test that the config file is not saved when save_config is False."""
+    config_file = tmp_path / ".python_hue"
+
+    with respx.mock(assert_all_called=True) as mock:
+        mock.post("http://192.168.1.100/api", name="create_user").mock(
+            return_value=httpx.Response(
+                200, json=[{"success": {"username": "nosavetest"}}]
+            )
+        )
+
+        # Create a bridge with save_config=False
+        bridge = phue2.Bridge(
+            ip="192.168.1.100",
+            config_file_path=str(config_file),
+            save_config=False,
+        )
+
+        # Verify config file was NOT created and username is set
+        assert not config_file.exists()
+        assert bridge.username == "nosavetest"
+
+        # Verify that trying to connect again without IP fails (as config wasn't saved)
+        with pytest.raises(phue2.PhueException):
+            phue2.Bridge(config_file_path=str(config_file))
