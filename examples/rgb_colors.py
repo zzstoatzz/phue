@@ -4,7 +4,7 @@ This script demonstrates how to set the color of a light to a specific RGB color
 WARNING: If you have not previously connected to the bridge, run connect_bridge.py first.
 """
 
-from phue2 import Bridge
+from phue import Bridge
 
 
 def rgb_to_xy(red: float, green: float, blue: float) -> list[float]:

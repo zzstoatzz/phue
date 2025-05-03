@@ -17,7 +17,7 @@ from tkinter import (
     Tk,
 )
 
-from phue2 import Bridge
+from phue import Bridge
 
 b = Bridge()  # Enter bridge IP here.
 

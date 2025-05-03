@@ -1,4 +1,4 @@
-from phue2 import Bridge
+from phue import Bridge
 
 modes = {
     "main": {

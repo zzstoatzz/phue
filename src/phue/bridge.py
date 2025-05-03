@@ -9,15 +9,15 @@ from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 import httpx
 
-from phue2.exceptions import (
+from phue.exceptions import (
     PhueException,
     PhueRegistrationException,
     PhueRequestTimeout,
 )
-from phue2.group import Group
-from phue2.light import Light
-from phue2.scene import Scene
-from phue2.sensor import Sensor
+from phue.group import Group
+from phue.light import Light
+from phue.scene import Scene
+from phue.sensor import Sensor
 
 logger = logging.getLogger("phue_modern")
 

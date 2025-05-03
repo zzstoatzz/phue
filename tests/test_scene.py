@@ -1,6 +1,6 @@
 """Test the Scene class."""
 
-from phue2.scene import Scene
+from phue.scene import Scene
 
 
 def test_scene_creation():

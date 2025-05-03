@@ -1,4 +1,4 @@
-name: Publish phue2 to PyPI
+name: Publish phue to PyPI
 on:
   release:
     types: [published]

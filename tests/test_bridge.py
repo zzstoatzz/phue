@@ -4,7 +4,7 @@ import httpx
 import pytest
 import respx
 
-import phue2
+import phue
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_bridge_discovery_and_registration(tmp_config_path: str) -> None:
         )
 
         # Create a bridge directly with IP and username, but use temp config
-        bridge = phue2.Bridge(
+        bridge = phue.Bridge(
             ip="192.168.1.100", username="testuser", config_file_path=tmp_config_path
         )
 
@@ -51,7 +51,7 @@ def test_light_control(tmp_config_path: str) -> None:
             )
         )
 
-        bridge = phue2.Bridge(
+        bridge = phue.Bridge(
             ip="192.168.1.100", username="testuser", config_file_path=tmp_config_path
         )
         light = bridge.lights[0]
@@ -64,11 +64,11 @@ def test_error_handling(tmp_config_path: str) -> None:
             side_effect=httpx.TimeoutException("Connection timed out")
         )
 
-        bridge = phue2.Bridge(
+        bridge = phue.Bridge(
             ip="192.168.1.100", username="testuser", config_file_path=tmp_config_path
         )
 
-        with pytest.raises(phue2.PhueRequestTimeout):
+        with pytest.raises(phue.PhueRequestTimeout):
             bridge.get_light()
 
 
@@ -83,12 +83,12 @@ def test_config_file(tmp_path: Path) -> None:
         )
 
         # Create a bridge and verify config file is created
-        bridge1 = phue2.Bridge(ip="192.168.1.100", config_file_path=str(config_file))
+        bridge1 = phue.Bridge(ip="192.168.1.100", config_file_path=str(config_file))
         assert config_file.exists()
         assert bridge1.username == "testuser"
 
         # Test loading from config
-        bridge2 = phue2.Bridge(config_file_path=str(config_file))
+        bridge2 = phue.Bridge(config_file_path=str(config_file))
         assert bridge2.username == "testuser"
 
 
@@ -104,7 +104,7 @@ def test_no_save_config(tmp_path: Path) -> None:
         )
 
         # Create a bridge with save_config=False
-        bridge = phue2.Bridge(
+        bridge = phue.Bridge(
             ip="192.168.1.100",
             config_file_path=str(config_file),
             save_config=False,
@@ -115,5 +115,5 @@ def test_no_save_config(tmp_path: Path) -> None:
         assert bridge.username == "nosavetest"
 
         # Verify that trying to connect again without IP fails (as config wasn't saved)
-        with pytest.raises(phue2.PhueException):
-            phue2.Bridge(config_file_path=str(config_file))
+        with pytest.raises(phue.PhueException):
+            phue.Bridge(config_file_path=str(config_file))

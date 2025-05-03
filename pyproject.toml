@@ -1,5 +1,5 @@
 [project]
-name = "phue2"
+name = "phue"
 dynamic = ["version"]
 description = "A Philips Hue Python library"
 authors = [{ name = "Nathanaël Lécaudé" }, { name = "Nathan Nowack" }]
@@ -9,7 +9,7 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.scripts]
-phue = "phue2.__main__:main"
+phue = "phue.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -32,7 +32,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/phue2"]
+packages = ["src/phue"]
 
 [tool.hatch.version]
 source = "vcs"

@@ -7,7 +7,7 @@ WARNING: If you have not previously connected to the bridge, run connect_bridge.
 import math
 import time
 
-from phue2 import Bridge
+from phue import Bridge
 
 # --- Configuration ---
 BRIDGE_IP = None  # Replace with your bridge's IP address

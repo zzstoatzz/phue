@@ -1,4 +1,4 @@
-# phue2
+# phue
 
 modern Python library to control the Philips Hue lighting system
 
@@ -13,15 +13,15 @@ This is a fork of the original [phue library](https://github.com/studioimaginair
 ### Using uv
 
 ```bash
-uv add phue2
+uv add phue
 
-uv pip install phue2
+uv pip install phue
 ```
 
 ### Using pip
 
 ```bash
-pip install phue2
+pip install phue
 ```
 
 ## Repository Structure
@@ -87,7 +87,7 @@ phue set group "Downstairs" --off
 Using the set_light and get_light methods you can control pretty much all the parameters:
 
 ```python
-from phue2 import Bridge
+from phue import Bridge
 
 # Connect to the bridge
 b = Bridge('192.168.1.100')
@@ -152,7 +152,7 @@ for light_name in ['Kitchen', 'Bedroom', 'Garage']:
 The library provides custom exceptions for better error handling:
 
 ```python
-from phue2 import Bridge, PhueRegistrationException, PhueRequestTimeout
+from phue import Bridge, PhueRegistrationException, PhueRequestTimeout
 
 try:
     b = Bridge('192.168.1.100')
