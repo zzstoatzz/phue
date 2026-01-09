@@ -253,34 +253,26 @@ def main(argv: list[str] | None = None) -> int:
         name = args.name
 
         if resource == "light":
-            # Try by ID first, then by name
-            light = None
             try:
-                light_id = int(name)
-                light = bridge.lights_by_id.get(light_id)
-            except ValueError:
-                pass
-
-            if not light:
-                light = bridge.lights_by_name.get(name)
-
-            if not light:
+                light = bridge.get_light(name)
+                assert(light["name"])
+            except KeyError:
                 console.error(f"Light '{name}' not found")
                 return 1
 
-            console.info(styled_for_cli(f"LIGHT: {light.name}", YELLOW + BOLD))
+            console.info(styled_for_cli(f"LIGHT: {light['name']}", YELLOW + BOLD))
             console.info(
-                f"  {styled_for_cli('Status:', BLUE)}      {styled_for_cli('ON' if light.on else 'OFF', GREEN if light.on else RED)}"
+                f"  {styled_for_cli('Status:', BLUE)}      {styled_for_cli('ON' if light['state']['on'] else 'OFF', GREEN if light['state']['on'] else RED)}"
             )
-            console.info(f"  {styled_for_cli('Type:', BLUE)}        {light.type}")
+            console.info(f"  {styled_for_cli('Type:', BLUE)}        {light['type']}")
             console.info(
-                f"  {styled_for_cli('Brightness:', BLUE)}  {light.brightness}/254"
+                f"  {styled_for_cli('Brightness:', BLUE)}  {light['state']['bri']}/254"
             )
-            console.info(f"  {styled_for_cli('Hue:', BLUE)}         {light.hue}/65535")
+            console.info(f"  {styled_for_cli('Hue:', BLUE)}         {light['state']['hue']}/65535")
             console.info(
-                f"  {styled_for_cli('Saturation:', BLUE)}  {light.saturation}/254"
+                f"  {styled_for_cli('Saturation:', BLUE)}  {light['state']['sat']}/254"
             )
-            console.info(f"  {styled_for_cli('Reachable:', BLUE)}   {light.reachable}")
+            console.info(f"  {styled_for_cli('Reachable:', BLUE)}   {light['state']['reachable']}")
 
         elif resource == "group":
             # Try to find group by name
@@ -322,45 +314,39 @@ def main(argv: list[str] | None = None) -> int:
         resource = args.resource
         name = args.name
         changed = False
+        state_changes: dict[str, object] = {}
+
+        if args.on:
+            state_changes["on"] = True
+            changed = True
+        elif args.off:
+            state_changes["on"] = False
+            changed = True
+
+        if args.bri is not None:
+            state_changes["bri"] = args.bri
+            changed = True
+
+        if args.hue is not None:
+            state_changes["hue"] = args.hue
+            changed = True
+
+        if args.sat is not None:
+            state_changes["sat"] = args.sat
+            changed = True
 
         if resource == "light":
-            # Try by ID first, then by name
             light = None
-            try:
-                light_id = int(name)
-                light = bridge.lights_by_id.get(light_id)
-            except ValueError:
-                pass
-
             if not light:
-                light = bridge.lights_by_name.get(name)
+                light = bridge.get_light(name)
 
             if not light:
                 console.error(f"Light '{name}' not found")
                 return 1
 
-            # Apply state changes
-            if args.on:
-                light.on = True
-                changed = True
-            elif args.off:
-                light.on = False
-                changed = True
-
-            if args.bri is not None:
-                light.brightness = args.bri
-                changed = True
-
-            if args.hue is not None:
-                light.hue = args.hue
-                changed = True
-
-            if args.sat is not None:
-                light.saturation = args.sat
-                changed = True
-
             if changed:
-                console.success(f"Updated light '{light.name}'")
+                bridge.set_light(name, state_changes)
+                console.success(f"Updated light '{light['name']}'")
             else:
                 console.warning("No changes specified")
 
@@ -381,29 +367,6 @@ def main(argv: list[str] | None = None) -> int:
             if group_id is None:
                 console.error(f"Group '{name}' not found")
                 return 1
-
-            # Apply state changes
-            state_changes: dict[str, object] = {}
-            changed = False
-
-            if args.on:
-                state_changes["on"] = True
-                changed = True
-            elif args.off:
-                state_changes["on"] = False
-                changed = True
-
-            if args.bri is not None:
-                state_changes["bri"] = args.bri
-                changed = True
-
-            if args.hue is not None:
-                state_changes["hue"] = args.hue
-                changed = True
-
-            if args.sat is not None:
-                state_changes["sat"] = args.sat
-                changed = True
 
             if changed:
                 bridge.set_group(group_id, state_changes)
