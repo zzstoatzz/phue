@@ -268,11 +268,15 @@ def main(argv: list[str] | None = None) -> int:
             console.info(
                 f"  {styled_for_cli('Brightness:', BLUE)}  {light['state']['bri']}/254"
             )
-            console.info(f"  {styled_for_cli('Hue:', BLUE)}         {light['state']['hue']}/65535")
+            console.info(
+                f"  {styled_for_cli('Hue:', BLUE)}         {light['state']['hue']}/65535"
+            )
             console.info(
                 f"  {styled_for_cli('Saturation:', BLUE)}  {light['state']['sat']}/254"
             )
-            console.info(f"  {styled_for_cli('Reachable:', BLUE)}   {light['state']['reachable']}")
+            console.info(
+                f"  {styled_for_cli('Reachable:', BLUE)}   {light['state']['reachable']}"
+            )
 
         elif resource == "group":
             # Try to find group by name
