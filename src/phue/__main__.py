@@ -255,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         if resource == "light":
             try:
                 light = bridge.get_light(name)
-                assert(light["name"])
+                assert light["name"]
             except KeyError:
                 console.error(f"Light '{name}' not found")
                 return 1
