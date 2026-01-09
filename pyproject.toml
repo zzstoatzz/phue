@@ -1,5 +1,5 @@
 [project]
-name = "phue"
+name = "phue2"
 dynamic = ["version"]
 description = "A Philips Hue Python library"
 authors = [{ name = "Nathanaël Lécaudé" }, { name = "Nathan Nowack" }]
