@@ -1,32 +1,24 @@
-"""Exceptions for Philips Hue requests."""
+"""Errors from Hue V2 transport and API responses."""
 
 from typing import Any
 
 
-class PhueException(Exception):
-    """Base exception for all Philips Hue related errors."""
-
-    def __init__(self, id: int, message: str):
-        self.id = id
-        self.message = message
-        super().__init__(f"Error {id}: {message}")
+class HueError(Exception):
+    """Base error for Hue communication."""
 
 
-class PhueRegistrationException(PhueException):
-    """Exception raised when registration with the bridge fails."""
+class HueAPIError(HueError):
+    """The bridge rejected a request; data retains any partial successes."""
 
-    pass
+    def __init__(self, errors: list[dict[str, Any]], data: list[dict[str, Any]]):
+        self.errors = errors
+        self.data = data
+        super().__init__(
+            "; ".join(
+                str(error.get("description", "Hue API error")) for error in errors
+            )
+        )
 
 
-class PhueRequestTimeout(PhueException):
-    """Exception raised when a request to the bridge times out."""
-
-    pass
-
-
-class PhueAPIError(PhueException):
-    """A Hue error response, possibly containing successful property updates too."""
-
-    def __init__(self, id: int, message: str, response: list[dict[str, Any]]):
-        super().__init__(id, message)
-        self.response = response
+class HueConnectionError(HueError):
+    """The bridge could not be reached or returned an invalid HTTP response."""

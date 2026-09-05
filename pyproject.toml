@@ -3,13 +3,10 @@ name = "phue2"
 dynamic = ["version"]
 description = "A Philips Hue Python library"
 authors = [{ name = "Nathanaël Lécaudé" }, { name = "Nathan Nowack" }]
-dependencies = ["httpx"]
+dependencies = ["httpx>=0.28", "pydantic>=2.10"]
 requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "MIT" }
-
-[project.scripts]
-phue = "phue.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -20,9 +17,6 @@ dev = [
     "pytest-flakefinder",
     "pytest-xdist>=3.6.1",
     "ruff",
-    "copychat>=0.5.2",
-    "ipython>=8.12.3",
-    "pdbpp>=0.10.3",
     "respx>=0.22.0",
 ]
 
