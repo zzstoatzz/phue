@@ -185,3 +185,47 @@ check its `id` for the Hue error code. A link-button registration error raises
 exception does not mean that every part of the command was rolled back.
 
 Transport exceptions omit the bridge application key from their messages.
+
+### Migrating to 0.1
+
+Successful calls keep their existing return shapes. API failures raise
+`PhueAPIError`, a subclass of `PhueException`; this makes the error behavior first
+introduced in 0.0.5 an explicit part of the minor-version contract. The earlier
+0.0.4 behavior returned error objects as ordinary data. Catch `PhueException` to
+handle both transport and API failures, or `PhueAPIError` to inspect the complete
+response, including partial successes:
+
+```python
+from phue import Bridge, PhueAPIError
+
+bridge = Bridge(ip="192.168.1.10", username="your-application-key", save_config=False)
+try:
+    bridge.set_light(1, {"on": True, "ct": 300})
+except PhueAPIError as error:
+    # The response may contain successful properties alongside errors.
+    response = error.response
+    current_state = bridge.get_light(1)
+```
+
+Lists of light or group targets are processed in order and stop on the first
+failure. Earlier targets may already have changed; later targets are not attempted.
+Unknown light or group names raise `KeyError` instead of being silently skipped.
+Passing a transition no longer adds fields to the caller's attribute dictionary.
+
+For a long-running service, supply a caller-owned HTTP client to reuse bridge
+connections. The bridge borrows it; its owner manages timeout and cleanup:
+
+```python
+import httpx
+from phue import Bridge
+
+with httpx.Client(timeout=10) as client:
+    bridge = Bridge(
+        ip="192.168.1.10",
+        username="your-application-key",
+        save_config=False,
+        http_client=client,
+    )
+    lights = bridge.get_light()
+    groups = bridge.get_group()
+```

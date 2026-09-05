@@ -8,7 +8,12 @@ Published under the MIT license
 "Hue Personal Wireless Lighting" is a trademark owned by Koninklijke Philips Electronics N.V.
 """
 
-from .exceptions import PhueException, PhueRegistrationException, PhueRequestTimeout
+from .exceptions import (
+    PhueAPIError,
+    PhueException,
+    PhueRegistrationException,
+    PhueRequestTimeout,
+)
 from .light import Light
 from .sensor import Sensor, SensorState, SensorConfig
 from .group import Group, AllLights
@@ -24,6 +29,7 @@ logger = logging.getLogger("phue")
 __all__ = [
     "Bridge",
     "PhueException",
+    "PhueAPIError",
     "PhueRegistrationException",
     "PhueRequestTimeout",
     "Light",
