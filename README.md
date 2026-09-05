@@ -175,3 +175,13 @@ MIT - http://opensource.org/licenses/MIT
 
 "Hue Personal Wireless Lighting" is a trademark owned by Koninklijke Philips Electronics N.V., see www.meethue.com for more information.
 I am in no way affiliated with the Philips organization.
+
+### Bridge errors
+
+Hue may return HTTP 200 with an error object, including after partially applying a
+multi-property command. `Bridge.request` raises `PhueException` for these responses;
+check its `id` for the Hue error code. A link-button registration error raises
+`PhueRegistrationException`. Read back the affected lights before retrying: an
+exception does not mean that every part of the command was rolled back.
+
+Transport exceptions omit the bridge application key from their messages.

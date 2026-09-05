@@ -481,7 +481,7 @@ wheels = [
 ]
 
 [[package]]
-name = "phue"
+name = "phue2"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

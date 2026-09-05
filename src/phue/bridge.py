@@ -139,32 +139,40 @@ class Bridge:
             PhueException: If the request fails
         """
         url = f"http://{self.ip}{address}"
-
+        if method not in {"GET", "DELETE", "PUT", "POST"}:
+            raise ValueError(f"Unsupported method: {method}")
         try:
             with httpx.Client(timeout=self.timeout) as client:
-                if method == "GET" or method == "DELETE":
-                    response = client.request(method, url)
-                elif method == "PUT" or method == "POST":
-                    response = client.request(method, url, json=data)
-                else:
-                    raise ValueError(f"Unsupported method: {method}")
-
-                logger.debug(f"{method} {address} {str(data)}")
+                response = client.request(
+                    method, url, json=data if method in {"PUT", "POST"} else None
+                )
                 response.raise_for_status()
-                return response.json()
-
+                result = response.json()
         except httpx.TimeoutException:
-            error = f"{method} Request to {url} timed out."
-            logger.exception(error)
-            raise PhueRequestTimeout(-1, error)
-        except httpx.HTTPStatusError as e:
-            error = f"{method} Request to {url} failed with status code {e.response.status_code}"
-            logger.exception(error)
-            raise PhueException(e.response.status_code, error)
-        except Exception as e:
-            error = f"{method} Request to {url} failed: {str(e)}"
-            logger.exception(error)
-            raise PhueException(-1, error)
+            raise PhueRequestTimeout(-1, f"{method} request timed out") from None
+        except httpx.HTTPStatusError as exc:
+            raise PhueException(
+                exc.response.status_code,
+                f"{method} request failed with HTTP {exc.response.status_code}",
+            ) from None
+        except httpx.RequestError:
+            raise PhueException(-1, f"{method} request failed to connect") from None
+        except ValueError:
+            raise PhueException(-1, "Bridge returned invalid JSON") from None
+
+        if isinstance(result, list):
+            for item in cast(list[Any], result):
+                if isinstance(item, dict) and "error" in item:
+                    error = cast(dict[str, Any], item["error"])
+                    code = int(error.get("type", -1))
+                    description = str(error.get("description", "Hue request failed"))
+                    if self._username:
+                        description = description.replace(self._username, "[redacted]")
+                    exception = (
+                        PhueRegistrationException if code == 101 else PhueException
+                    )
+                    raise exception(code, description)
+        return cast(Any, result)
 
     def get_ip_address(self, set_result: bool = False) -> str | None:
         """Get the bridge ip address from the meethue.com nupnp api.
