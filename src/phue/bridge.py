@@ -5,11 +5,13 @@ import logging
 import os
 import platform
 from collections.abc import Hashable, Iterable
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 import httpx
 
 from phue.exceptions import (
+    PhueAPIError,
     PhueException,
     PhueRegistrationException,
     PhueRequestTimeout,
@@ -47,6 +49,7 @@ class Bridge:
         config_file_path: str | None = None,
         timeout: int = 10,
         save_config: bool = True,
+        http_client: httpx.Client | None = None,
     ):
         """Initialization function.
 
@@ -56,6 +59,8 @@ class Bridge:
             config_file_path: Optional path to the configuration file
             timeout: Request timeout in seconds (default: 10)
             save_config: If False, don't save the config file (default: True)
+            http_client: Optional caller-owned client for connection pooling. The caller
+                controls its timeout and closes it; the bridge never closes this client.
         """
         # Determine config file path
         if config_file_path is not None:
@@ -90,6 +95,7 @@ class Bridge:
 
         self.ip = ip
         self._username = username
+        self._http_client = http_client
         self.timeout = timeout
         self.save_config = save_config
         self.lights_by_id: dict[int, Light] = {}
@@ -142,7 +148,12 @@ class Bridge:
         if method not in {"GET", "DELETE", "PUT", "POST"}:
             raise ValueError(f"Unsupported method: {method}")
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            context = (
+                nullcontext(self._http_client)
+                if self._http_client is not None
+                else httpx.Client(timeout=self.timeout)
+            )
+            with context as client:
                 response = client.request(
                     method, url, json=data if method in {"PUT", "POST"} else None
                 )
@@ -168,10 +179,11 @@ class Bridge:
                     description = str(error.get("description", "Hue request failed"))
                     if self._username:
                         description = description.replace(self._username, "[redacted]")
-                    exception = (
-                        PhueRegistrationException if code == 101 else PhueException
+                    if code == 101:
+                        raise PhueRegistrationException(code, description)
+                    raise PhueAPIError(
+                        code, description, cast(list[dict[str, Any]], result)
                     )
-                    raise exception(code, description)
         return cast(Any, result)
 
     def get_ip_address(self, set_result: bool = False) -> str | None:
@@ -527,7 +539,7 @@ class Bridge:
             A list of responses from the API
         """
         if isinstance(parameter, dict):
-            data = parameter
+            data = dict(parameter)
         else:
             data = {parameter: value}
 
@@ -557,8 +569,7 @@ class Bridge:
                 if isinstance(light, str) and not light.isdigit():
                     converted_light = self.get_light_id_by_name(light)
                     if converted_light is None:
-                        logger.warning(f"Could not find light with name: {light}")
-                        continue
+                        raise KeyError(f"Light {light!r} not found")
                 else:
                     converted_light = light
                 result.append(
@@ -571,15 +582,6 @@ class Bridge:
                         + "/state",
                         data,
                     )
-                )
-            if (
-                result
-                and isinstance(result[-1], list)
-                and result[-1]
-                and "error" in result[-1][0]
-            ):
-                logger.warning(
-                    f"ERROR: {result[-1][0]['error']['description']} for light {light}"
                 )
 
         logger.debug(result)
@@ -894,7 +896,7 @@ class Bridge:
         username = self.username
 
         if isinstance(parameter, dict):
-            data = parameter
+            data = dict(parameter)
         elif parameter == "lights" and (
             isinstance(value, list) or isinstance(value, int)
         ):
@@ -925,8 +927,7 @@ class Bridge:
             if isinstance(group, str) and not group.isdigit():
                 converted_group = self.get_group_id_by_name(group)
                 if converted_group is None:
-                    logger.error("Group name does not exist")
-                    continue
+                    raise KeyError(f"Group {group!r} not found")
             else:
                 converted_group = group
 
@@ -949,16 +950,6 @@ class Bridge:
                         + "/action",
                         data,
                     )
-                )
-
-            if (
-                result
-                and isinstance(result[-1], list)
-                and result[-1]
-                and "error" in result[-1][0]
-            ):
-                logger.warning(
-                    f"ERROR: {result[-1][0]['error']['description']} for group {group}"
                 )
 
         logger.debug(result)
