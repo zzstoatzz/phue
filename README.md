@@ -1,231 +1,131 @@
-# phue
+# phue2 — Philips Hue V2 SDK
 
-modern Python library to control the Philips Hue lighting system
+An asynchronous Python client for the local Hue V2 API. The first-major alpha
+focuses on lights, rooms, saved scenes and native effects, with typed resources
+that retain unknown fields as Hue adds capabilities.
 
-This is a fork of the original [phue library](https://github.com/studioimaginaire/phue) by Nathanaël Lécaudé, modernized with type annotations, improved error handling, and a fully-featured CLI. The library remains MIT licensed.
-
-> [!IMPORTANT]
-
-> I appreciate the original authors work and if there's any interest in merging these (substantial) changes back into the original library, I'm happy to do so.
-
-## Installation
-
-### Using uv
+## Install
 
 ```bash
-uv add phue
-
-uv pip install phue
+uv add 'phue2==1.0.0a1'
 ```
 
-### Using pip
+Python 3.10 or newer is required. This is a breaking prerelease. The previous
+synchronous Hue V1 library remains on the [`release/0.x`](https://github.com/zzstoatzz/phue/tree/release/0.x)
+branch and remains installable with `phue2<1` (without opting into prereleases).
 
-```bash
-pip install phue
-```
+## Discover and control
 
-## Repository Structure
-
-```
-.
-├── LICENSE
-├── README.md
-├── examples/
-├── src/
-│   └── phue/
-│       ├── __init__.py
-│       ├── __main__.py      # CLI interface
-│       ├── bridge.py        # Bridge connection handling
-│       ├── exceptions.py    # Custom exceptions
-│       ├── group.py         # Group controls
-│       ├── light.py         # Light controls
-│       ├── scene.py         # Scene handling
-│       └── sensor.py        # Sensor controls
-└── tests/              # Tests
-```
-
-## Requirements
-
-- Python 3.10 or higher (not compatible with Python 2.x)
-- httpx (for network requests)
-
-## Features
-
-- Fully typed with Python type annotations
-- Robust error handling with custom exceptions
-- Comprehensive test suite
-- Colorful, user-friendly command-line interface
-- Support for Lights, Groups, Scenes, and Sensors
-- Auto-discovery of Hue bridges on the network
-- Simple and intuitive API for controlling Hue devices
-
-
-
-## Command Line Usage
-
-The library includes a command-line interface for controlling your Hue lights:
-
-```bash
-# List all lights
-phue ls
-
-# Get details about a specific light
-phue get light "Living Room"
-
-# Turn on a light and set brightness
-phue set light "Kitchen" --on --bri 200
-
-# List all groups
-phue ls groups
-
-# Turn off lights in a group
-phue set group "Downstairs" --off
-```
-
-## Basic Usage
-
-Using the set_light and get_light methods you can control pretty much all the parameters:
+Use your existing bridge application key. Nothing is written to a credential
+file. Open one bridge context for the lifetime of your application:
 
 ```python
-from phue import Bridge
+import asyncio
+import os
+from phue import Bridge, LightState
 
-# Connect to the bridge
-b = Bridge('192.168.1.100')
+async def main():
+    async with Bridge(
+        os.environ["HUE_BRIDGE_IP"],
+        os.environ["HUE_BRIDGE_USERNAME"],
+    ) as bridge:
+        lights = await bridge.lights()
+        for light in lights:
+            print(light.id, light.metadata.name, light.supported_effects)
 
-# If the app is not registered and the button is not pressed, press the button and call connect()
-# This only needs to be run a single time
-b.connect()
+        # Choose an ID from discovery; this changes a real light.
+        light = lights[0]
+        await bridge.set_light(light.id, LightState(on=True, brightness=30))
+        print((await bridge.light(light.id)).model_dump())
 
-# Get the bridge state (This returns the full dictionary that you can explore)
-b.get_api()
-
-# Prints if light 1 is on or not
-b.get_light(1, 'on')
-
-# Set brightness of lamp 1 to max
-b.set_light(1, 'bri', 254)
-
-# Turn lamp 2 on
-b.set_light(2, 'on', True)
-
-# You can also control multiple lamps by sending a list as lamp_id
-b.set_light([1, 2], 'on', True)
-
-# You can also use light names instead of the id
-b.get_light('Kitchen')
-b.set_light('Kitchen', 'bri', 254)
-
-# Also works with lists
-b.set_light(['Bathroom', 'Garage'], 'on', False)
+asyncio.run(main())
 ```
 
-### Light Objects
+TLS verification is enabled by default. For bridges with a private certificate,
+pass `verify=ssl_context` with a context that trusts your bridge. For a deliberately
+pinned bridge certificate, load its PEM into an `ssl.SSLContext`, enable
+`ssl.VERIFY_X509_PARTIAL_CHAIN`, and disable hostname matching only if the certificate
+uses the bridge identity rather than its IP address. Obtain and verify that
+certificate through a trusted local setup process. `verify=False` is available
+for explicit diagnostics, not required by the SDK. Never publish an application key.
 
-If you want to work in a more object-oriented way, you can get Light objects:
+An optional `http_client=httpx.AsyncClient(...)` remains caller-owned; the bridge
+will not close it. Its owner configures TLS and timeouts. Otherwise the bridge
+creates and closes its own pooled client. Calls outside an `async with` block are
+rejected. Nested entry of the same bridge is rejected; a closed owned context can
+be entered again.
 
-```python
-# Get a flat list of light objects
-lights = b.lights
+## Native effects and scenes
 
-# Print light names
-for light in lights:
-    print(light.name)
-
-# Set brightness of each light to 127
-for light in lights:
-    light.brightness = 127
-
-# Get a dictionary with the light name as the key
-light_names = b.get_light_objects('name')
-
-# Set lights using name as key
-for light_name in ['Kitchen', 'Bedroom', 'Garage']:
-    light = light_names.get(light_name)
-    if light:
-        light.on = True
-        light.hue = 15000
-        light.saturation = 120
-```
-
-## Error Handling
-
-The library provides custom exceptions for better error handling:
+`LightState` uses brightness percent, temperature in kelvin, CIE xy coordinates,
+and transition seconds. Omitted fields remain unchanged. Normal state changes do
+not imply `on=True`. An effect uses its own optional speed between zero and one;
+it cannot be combined with a normal transition duration.
 
 ```python
-from phue import Bridge, PhueRegistrationException, PhueRequestTimeout
+from phue import Bridge, LightState
 
-try:
-    b = Bridge('192.168.1.100')
-    b.connect()
-except PhueRegistrationException:
-    print("Press the button on the bridge and try again")
-except PhueRequestTimeout:
-    print("Could not connect to the bridge - check your network")
-```
-
-## Acknowledgments
-
-This project is a fork of the original [phue](https://github.com/studioimaginaire/phue) library created by Nathanaël Lécaudé.
-
-The modernized version was created by [zzstoatzz](https://github.com/zzstoatzz) to add type annotations and a more opinionated CLI.
-
-## License
-
-MIT - http://opensource.org/licenses/MIT
-
-"Hue Personal Wireless Lighting" is a trademark owned by Koninklijke Philips Electronics N.V., see www.meethue.com for more information.
-I am in no way affiliated with the Philips organization.
-
-### Bridge errors
-
-Hue may return HTTP 200 with an error object, including after partially applying a
-multi-property command. `Bridge.request` raises `PhueException` for these responses;
-check its `id` for the Hue error code. A link-button registration error raises
-`PhueRegistrationException`. Read back the affected lights before retrying: an
-exception does not mean that every part of the command was rolled back.
-
-Transport exceptions omit the bridge application key from their messages.
-
-### Migrating to 0.1
-
-Successful calls keep their existing return shapes. API failures raise
-`PhueAPIError`, a subclass of `PhueException`; this makes the error behavior first
-introduced in 0.0.5 an explicit part of the minor-version contract. The earlier
-0.0.4 behavior returned error objects as ordinary data. Catch `PhueException` to
-handle both transport and API failures, or `PhueAPIError` to inspect the complete
-response, including partial successes:
-
-```python
-from phue import Bridge, PhueAPIError
-
-bridge = Bridge(ip="192.168.1.10", username="your-application-key", save_config=False)
-try:
-    bridge.set_light(1, {"on": True, "ct": 300})
-except PhueAPIError as error:
-    # The response may contain successful properties alongside errors.
-    response = error.response
-    current_state = bridge.get_light(1)
-```
-
-Lists of light or group targets are processed in order and stop on the first
-failure. Earlier targets may already have changed; later targets are not attempted.
-Unknown light or group names raise `KeyError` instead of being silently skipped.
-Passing a transition no longer adds fields to the caller's attribute dictionary.
-
-For a long-running service, supply a caller-owned HTTP client to reuse bridge
-connections. The bridge borrows it; its owner manages timeout and cleanup:
-
-```python
-import httpx
-from phue import Bridge
-
-with httpx.Client(timeout=10) as client:
-    bridge = Bridge(
-        ip="192.168.1.10",
-        username="your-application-key",
-        save_config=False,
-        http_client=client,
+async def candle(bridge: Bridge, light_id: str):
+    # Only effects advertised by this bulb are accepted.
+    await bridge.set_light(
+        light_id,
+        LightState(effect="candle", effect_speed=0.5, brightness=20),
     )
-    lights = bridge.get_light()
-    groups = bridge.get_group()
+
+async def stop_effect(bridge: Bridge, light_id: str):
+    await bridge.set_light(light_id, LightState(effect="no_effect"))
 ```
+
+Effect names come from bridge discovery rather than a fixed enum. This alpha
+requires the newer `effects_v2` feature when applying effects. It does not fall
+back to the deprecated effects representation. Per-light support is checked
+before a write. Color or temperature supplied with an active effect is sent as
+an effect parameter.
+
+`await bridge.scenes()` exposes full scene actions and palettes. Recall a scene
+with `await bridge.recall_scene(scene_id)`, or request its dynamic palette with
+`action="dynamic_palette"` where supported by the bridge. The SDK does not emulate
+flicker by repeatedly sending brightness commands.
+
+Rooms refer to devices through `children` and to grouped-light services through
+`services`. Light `owner` references identify their device. Use the room's
+`grouped_light` service ID with `set_group`; a room ID is not a grouped-light ID.
+Native effects target individual lights. `resources()` exposes the full inventory
+for joining these relationships and reading connectivity data.
+
+## Errors
+
+`HueAPIError` retains the bridge's `errors` and any returned `data`, including
+acknowledged resources in a partially successful response. `HueConnectionError`
+covers transport, HTTP and malformed-envelope failures. Both subclass `HueError`.
+An acknowledgement is not physical verification; read state after a transition.
+The SDK does not retry writes automatically.
+
+## Migrating from 0.x
+
+- `Bridge(ip=..., username=...)` becomes asynchronous `Bridge(host, application_key)`.
+- V1 numeric IDs become V2 resource IDs. The bridge-provided `id_v1` can help map
+  existing lights; rediscover rooms and their grouped-light service references.
+- `get_light()` becomes `lights()`; `get_light(id)` becomes `light(id)`.
+- `set_light(id, "bri", 127)` becomes `set_light(id, LightState(brightness=50))`.
+- Group names and scene names are resolved by the application, not guessed by the SDK.
+- V1 object properties, sensors/schedules APIs, and the old CLI are not part of this
+  initial alpha. Event subscriptions and entertainment streaming are not implemented.
+
+This release intentionally covers the smart-home example's V2 workflows first.
+It does not claim parity with the full V1 SDK or the entire Hue API.
+
+## Development
+
+```bash
+uv sync
+uv run pytest
+uv run pre-commit run --all-files
+```
+
+## Acknowledgments and license
+
+This project grew from [phue](https://github.com/studioimaginaire/phue) by Nathanaël
+Lécaudé and earlier protocol work by rsmck. Nathan Nowack maintained the modernized
+fork and the V2 rewrite. MIT license; see LICENSE. Philips Hue is a trademark of
+Koninklijke Philips N.V.; this project is not affiliated with Philips or Signify.
